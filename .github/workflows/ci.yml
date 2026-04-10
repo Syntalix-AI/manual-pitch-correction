@@ -1,0 +1,89 @@
+name: CI — Pull Request checks
+
+# ─── Triggers ──────────────────────────────────────────────────────────────────
+# Runs CI checks on PRs targeting dev (no deploy).
+# The full CI + Deploy pipeline lives in deploy.yml (triggered on push to dev).
+on:
+  pull_request:
+    branches:
+      - dev
+
+concurrency:
+  group: ci-pr-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ───────────────────────────────────────────────────────────────────────────
+  # Job 1 — Backend Docker build
+  # ───────────────────────────────────────────────────────────────────────────
+  backend-build:
+    name: 🐍 Backend — Docker build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build backend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          push: false
+          cache-from: type=gha
+          cache-to:   type=gha,mode=max
+          tags: pitch-correction-backend:pr
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # Job 2 — Frontend type-check + Docker build
+  # ───────────────────────────────────────────────────────────────────────────
+  frontend-build:
+    name: ⚛️  Frontend — Type-check & Docker build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: TypeScript type-check
+        working-directory: frontend
+        run: npx tsc --noEmit
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build frontend image (production)
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          push: false
+          cache-from: type=gha
+          cache-to:   type=gha,mode=max
+          tags: pitch-correction-frontend:pr
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # Job 3 — Validate docker-compose.yml
+  # ───────────────────────────────────────────────────────────────────────────
+  compose-lint:
+    name: 🐳 docker-compose.yml — Validate
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Validate docker-compose config
+        run: docker compose config --quiet

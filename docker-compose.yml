@@ -16,7 +16,7 @@ services:
       context: ./frontend
     container_name: pitch_correction_frontend
     ports:
-      - "3000:3000"
+     - "3000:80"
     volumes:
       - ./frontend:/app
       - /app/node_modules

@@ -113,12 +113,15 @@ jobs:
 
       # ── Quick connectivity check before attempting deploy ───────────────────
       - name: Test SSH connection
-  run: |
-    ssh -i ~/.ssh/deploy_key \
-        -o StrictHostKeyChecking=no \
-        -o ConnectTimeout=10 \
-        ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} \
-        "echo SSH OK"
+        env:
+          EC2_USER: ${{ secrets.EC2_USER }}
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+        run: |
+          ssh -i ~/.ssh/deploy_key \
+              -o StrictHostKeyChecking=no \
+              -o ConnectTimeout=10 \
+              "${EC2_USER}@${EC2_HOST}" \
+              "echo SSH OK"
 
       # ── SSH into EC2 and run deploy.sh ─────────────────────────────────────
       - name: Deploy on EC2

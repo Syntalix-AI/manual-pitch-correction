@@ -128,7 +128,7 @@ jobs:
         env:
           EC2_USER: ${{ secrets.EC2_USER }}
           EC2_HOST: ${{ secrets.EC2_HOST }}
-          APP_DIR:  ${{ secrets.EC2_APP_DIR }}
+          APP_DIR:  ${{ secrets.EC2_DEV_DIR }}
         run: |
           echo "→ Deploying to ${EC2_USER}@${EC2_HOST}:${APP_DIR}"
           ssh -i ~/.ssh/deploy_key \

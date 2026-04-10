@@ -135,7 +135,7 @@ jobs:
               -o StrictHostKeyChecking=no \
               -o ConnectTimeout=15 \
               "${EC2_USER}@${EC2_HOST}" \
-              "BRANCH=dev bash '${APP_DIR}/deploy.sh'"
+              "cd ${APP_DIR} && BRANCH=dev ./deploy.sh"
 
       # ── Smoke test — frontend (port 3000 → nginx :80 inside container) ─────
       - name: Smoke test — frontend reachable

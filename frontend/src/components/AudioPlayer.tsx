@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { useStore } from '../store/useStore';
 import { getStreamUrl } from '../api';
+import { Play, Pause, Download, Sparkles, Loader2 } from 'lucide-react';
 
 export default function AudioPlayer() {
     const renderedUrl = useStore(s => s.renderedUrl);
@@ -46,7 +47,7 @@ export default function AudioPlayer() {
     };
 
     return (
-        <div className="flex items-center gap-4 px-5 h-12 bg-[#16213e] border-b border-[#0f3460]/60 shrink-0 shadow-md z-10">
+        <div className="flex items-center gap-6 px-6 h-16 bg-[#16213e]/80 backdrop-blur-lg border-b border-white/5 shrink-0 shadow-2xl z-10">
             <audio
                 ref={audioRef}
                 src={renderedUrl || ''}
@@ -56,61 +57,72 @@ export default function AudioPlayer() {
 
             <button
                 onClick={() => setPlaying(!playing)}
-                className="w-8 h-8 flex items-center justify-center rounded-full bg-gradient-to-b from-blue-500 to-blue-700 hover:from-blue-400 hover:to-blue-600 transition-all shadow text-sm"
+                className="w-10 h-10 flex items-center justify-center rounded-xl bg-blue-600 hover:bg-blue-500 transition-all shadow-[0_0_20px_rgba(37,99,235,0.3)] group active:scale-95"
                 title={playing ? 'Pause' : 'Play'}
             >
-                {playing ? '⏸' : '▶'}
+                {playing ? (
+                    <Pause className="w-5 h-5 text-white fill-white" />
+                ) : (
+                    <Play className="w-5 h-5 text-white fill-white ml-0.5" />
+                )}
             </button>
 
-            <div className="flex-1 flex items-center gap-3">
-                <span className="text-[11px] text-gray-400 font-mono w-16 text-right">{formatTime(currentTime)}</span>
-                <input
-                    type="range"
-                    max={duration || 1}
-                    step={0.01}
-                    value={currentTime}
-                    onChange={handleSeek}
-                    className="flex-1 accent-blue-500 h-1"
-                />
-                <span className="text-[11px] text-gray-500 font-mono w-16">{formatTime(duration)}</span>
+            <div className="flex-1 flex items-center gap-4">
+                <span className="text-[10px] text-blue-400 font-bold font-mono w-16 text-right tabular-nums tracking-wider">{formatTime(currentTime)}</span>
+                <div className="flex-1 relative group py-2">
+                    <input
+                        type="range"
+                        max={duration || 1}
+                        step={0.01}
+                        value={currentTime}
+                        onChange={handleSeek}
+                        className="w-full accent-blue-500 h-1.5 bg-background rounded-full appearance-none cursor-pointer"
+                    />
+                </div>
+                <span className="text-[10px] text-gray-500 font-bold font-mono w-16 tabular-nums tracking-wider">{formatTime(duration)}</span>
             </div>
 
-            <button
-                onClick={renderChanges}
-                disabled={loading}
-                className="px-4 py-1.5 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 rounded-lg text-xs font-semibold transition-all shadow disabled:opacity-50"
-            >
-                {loading ? '⏳ Rendering...' : '✨ Apply & Render'}
-            </button>
+            <div className="flex items-center gap-3">
+                <button
+                    onClick={renderChanges}
+                    disabled={loading}
+                    className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 rounded-xl text-xs font-bold transition-all shadow-[0_0_20px_rgba(147,51,234,0.3)] disabled:opacity-50 active:scale-95"
+                >
+                    {loading ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                        <Sparkles className="w-3.5 h-3.5" />
+                    )}
+                    {loading ? 'Rendering...' : 'Render Audio'}
+                </button>
 
-            <button
-                onClick={async () => {
-                    if (!fileId) return;
-                    const useRendered = Boolean(renderedUrl);
-                    const url = getStreamUrl(fileId, useRendered);
-                    try {
-                        const res = await fetch(url);
-                        if (!res.ok) throw new Error('Failed to fetch audio');
-                        const blob = await res.blob();
-                        const a = document.createElement('a');
-                        const name = `${fileId}${useRendered ? '_rendered.wav' : '.wav'}`;
-                        a.href = URL.createObjectURL(blob);
-                        a.download = name;
-                        document.body.appendChild(a);
-                        a.click();
-                        a.remove();
-                        setTimeout(() => URL.revokeObjectURL(a.href), 5000);
-                    } catch (err) {
-                        console.error(err);
-                        alert('Download failed');
-                    }
-                }}
-                className="ml-2 px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded-lg text-xs font-semibold transition-all shadow"
-                title="Download audio"
-            >
-                ⬇️ Download
-            </button>
+                <button
+                    onClick={async () => {
+                        if (!fileId) return;
+                        const useRendered = Boolean(renderedUrl);
+                        const url = getStreamUrl(fileId, useRendered);
+                        try {
+                            const res = await fetch(url);
+                            if (!res.ok) throw new Error('Failed to fetch audio');
+                            const blob = await res.blob();
+                            const a = document.createElement('a');
+                            const name = `${fileId}${useRendered ? '_rendered.wav' : '.wav'}`;
+                            a.href = URL.createObjectURL(blob);
+                            a.download = name;
+                            document.body.appendChild(a);
+                            a.click();
+                            a.remove();
+                            setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+                        } catch (err) {
+                            console.error(err);
+                        }
+                    }}
+                    className="p-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-gray-400 hover:text-white transition-all active:scale-95"
+                    title="Download audio"
+                >
+                    <Download className="w-4 h-4" />
+                </button>
+            </div>
         </div>
     );
 }
-

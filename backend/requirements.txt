@@ -3,5 +3,8 @@ uvicorn
 numpy
 scipy
 soundfile
-parselmouth
+praat-parselmouth==0.4.3
 pydantic
+
+# BLOCK broken dependency
+googleads==0.0.0

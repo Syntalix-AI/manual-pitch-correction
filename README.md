@@ -1,4 +1,5 @@
-# Pitch Correction App (Music Putty Clone)
+# Kord
+## Manual Pitch Correction Engine
 
 A full-stack web application designed for manual pitch correction, using audio processing and a graphical interface similar to Melodyne / Music Putty.
 

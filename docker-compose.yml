@@ -6,21 +6,29 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - ./backend:/app
-      - /app/uploads
+      - uploads_data:/app/uploads
     environment:
       - PYTHONUNBUFFERED=1
+    restart: unless-stopped
+    networks:
+      - app-network
 
   frontend:
     build:
       context: ./frontend
     container_name: pitch_correction_frontend
     ports:
-     - "3000:80"
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
+      - "3000:80"
     depends_on:
       - backend
+    restart: unless-stopped
     environment:
-      - WATCHPACK_POLLING=true
+      - VITE_API_URL=http://localhost:8000
+    networks:
+      - app-network
+
+volumes:
+  uploads_data:
+
+networks:
+  app-network:

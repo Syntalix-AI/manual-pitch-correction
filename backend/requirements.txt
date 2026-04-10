@@ -5,3 +5,4 @@ scipy
 soundfile
 praat-parselmouth==0.4.3
 pydantic
+python-multipart

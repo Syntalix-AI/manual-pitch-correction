@@ -130,11 +130,12 @@ jobs:
           EC2_HOST: ${{ secrets.EC2_HOST }}
           APP_DIR:  ${{ secrets.EC2_APP_DIR }}
         run: |
+          echo "→ Deploying to ${EC2_USER}@${EC2_HOST}:${APP_DIR}"
           ssh -i ~/.ssh/deploy_key \
               -o StrictHostKeyChecking=no \
               -o ConnectTimeout=15 \
               "${EC2_USER}@${EC2_HOST}" \
-              "cd ${APP_DIR} && BRANCH=dev bash deploy.sh"
+              "BRANCH=dev bash '${APP_DIR}/deploy.sh'"
 
       # ── Smoke test — frontend (port 3000 → nginx :80 inside container) ─────
       - name: Smoke test — frontend reachable

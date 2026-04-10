@@ -17,7 +17,7 @@ error()   { echo -e "${RED}[ERROR]${RESET} $*" >&2; }
 
 # ─── Config ───────────────────────────────────────────────────────────────────
 APP_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-BRANCH="${BRANCH:-main}"
+BRANCH="${BRANCH:-dev}"
 NO_CACHE=""
 COMPOSE_FILE="$APP_DIR/docker-compose.yml"
 

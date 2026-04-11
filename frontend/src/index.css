@@ -1,32 +1,99 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+:root {
+    color-scheme: dark;
+}
+
+body {
+    background-color: #0e0e1a !important;
+    color: white !important;
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
+}
+
+/* Fallback if tailwind fails */
+.bg-\[\#1a1a2e\] {
+    background-color: #1a1a2e !important;
+}
+
+.bg-\[\#16213e\] {
+    background-color: #16213e !important;
+}
+
+.bg-\[\#0e0e1a\] {
+    background-color: #0e0e1a !important;
+}
+
+.text-white {
+    color: white !important;
+}
 
 @layer base {
-  body {
-    @apply bg-background text-white antialiased;
-    font-feature-settings: "ss01", "ss02", "cv01", "cv02";
-  }
-}
+    @font-face {
+        font-family: 'Inter';
+        font-style: normal;
+        font-weight: 100 900;
+        font-display: swap;
+        src: url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+    }
 
-/* Custom Scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
+    * {
+        scrollbar-width: thin;
+        scrollbar-color: rgba(80, 80, 120, 0.4) transparent;
+    }
 
-::-webkit-scrollbar-track {
-  @apply bg-background;
-}
+    *::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
 
-::-webkit-scrollbar-thumb {
-  @apply bg-panel rounded-full border-2 border-background hover:bg-gray-600 transition-colors;
-}
+    *::-webkit-scrollbar-track {
+        background: transparent;
+    }
 
-.glass-panel {
-  @apply bg-panel/80 backdrop-blur-md border border-white/5 shadow-2xl;
-}
+    *::-webkit-scrollbar-thumb {
+        background: rgba(80, 80, 120, 0.4);
+        border-radius: 4px;
+    }
 
-.kord-gradient-text {
-  @apply bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-purple-400 to-pink-500;
+    *::-webkit-scrollbar-thumb:hover {
+        background: rgba(100, 100, 160, 0.6);
+    }
+
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: rgba(80, 80, 120, 0.2);
+        border-radius: 3px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: rgba(100, 100, 160, 0.4);
+    }
+
+    input[type="range"] {
+        -webkit-appearance: none;
+        appearance: none;
+        height: 4px;
+        border-radius: 2px;
+        background: rgba(60, 60, 100, 0.4);
+        outline: none;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: #818cf8;
+        cursor: pointer;
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 0 6px rgba(129, 140, 248, 0.5);
+    }
 }

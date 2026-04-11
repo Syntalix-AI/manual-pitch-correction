@@ -1,20 +1,17 @@
-# Build stage
-FROM node:18-alpine AS build
-
+FROM node:20-alpine AS builder
 WORKDIR /app
 
-COPY package.json package-lock.json* ./
-RUN npm install
+# Allow build-time API URL injection (Vite bakes env at build)
+ARG VITE_API_URL
+ENV VITE_API_URL=${VITE_API_URL}
+
+COPY package*.json ./
+RUN npm ci --silent
 
 COPY . .
 RUN npm run build
 
-
-# Serve stage
-FROM nginx:alpine
-
-COPY --from=build /app/dist /usr/share/nginx/html
-
+FROM nginx:stable-alpine
+COPY --from=builder /app/dist /usr/share/nginx/html
 EXPOSE 80
-
-CMD ["nginx", "-g", "daemon off;"]
+CMD ["/bin/sh", "-c", "nginx -g 'daemon off;'" ]

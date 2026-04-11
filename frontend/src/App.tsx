@@ -1,82 +1,174 @@
-import React from 'react'
-import AudioPlayer from './components/AudioPlayer'
-import { Music2, Layers, Cpu, Waves } from 'lucide-react'
+import React, { useRef, useEffect } from 'react';
+import { useStore } from './store/useStore';
+import PianoRoll from './components/PianoRoll';
+import NoteInspector from './components/NoteInspector';
 
 export default function App() {
-  return (
-    <div className="flex flex-col h-screen bg-[#0b1020] text-gray-200 overflow-hidden font-sans">
-      {/* Premium Header */}
-      <header className="flex items-center justify-between px-6 py-4 border-b border-white/5 bg-[#0b1020]/50 backdrop-blur-xl z-20">
-        <div className="flex items-center gap-3">
-          <div className="relative group">
-            <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg blur opacity-40 group-hover:opacity-100 transition duration-500"></div>
-            <div className="relative flex items-center justify-center w-10 h-10 bg-[#16213e] rounded-lg border border-white/10 shadow-xl">
-              <Waves className="w-6 h-6 text-blue-400" />
-            </div>
-          </div>
-          <div>
-            <h1 className="text-2xl font-black tracking-tighter kord-gradient-text uppercase">Kord</h1>
-            <p className="text-[10px] uppercase tracking-[0.2em] font-bold text-gray-500 -mt-1">Manual Pitch Engine</p>
-          </div>
-        </div>
+    const fileId = useStore(s => s.fileId);
+    const setFile = useStore(s => s.setFile);
+    const loading = useStore(s => s.loading);
+    const error = useStore(s => s.error);
+    const playing = useStore(s => s.playing);
+    const setPlaying = useStore(s => s.setPlaying);
+    const currentTime = useStore(s => s.currentTime);
+    const setCurrentTime = useStore(s => s.setCurrentTime);
+    const renderedUrl = useStore(s => s.renderedUrl);
+    const currentTool = useStore(s => s.currentTool);
+    const setCurrentTool = useStore(s => s.setCurrentTool);
+    const contextMenu = useStore(s => s.contextMenu);
+    const setContextMenu = useStore(s => s.setContextMenu);
+    const splitNote = useStore(s => s.splitNote);
+    const deleteNote = useStore(s => s.deleteNote);
+    const setInspectorOpen = useStore(s => s.setInspectorOpen);
 
-        <div className="flex items-center gap-6">
-          <div className="flex items-center gap-2 text-xs font-medium text-gray-400">
-            <Cpu className="w-4 h-4 text-purple-500" />
-            <span>Processing Active</span>
-          </div>
-          <div className="flex items-center gap-2 text-xs font-medium text-gray-400">
-            <Layers className="w-4 h-4 text-blue-500" />
-            <span>v0.1.0-alpha</span>
-          </div>
-          <button className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full transition-all duration-300 text-xs font-semibold backdrop-blur-md">
-            <Music2 className="w-4 h-4" />
-            Project Settings
-          </button>
-        </div>
-      </header>
+    const audioRef = useRef<HTMLAudioElement>(null);
 
-      {/* Control Bar (AudioPlayer) */}
-      <AudioPlayer />
+    const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            setFile(e.target.files[0]);
+        }
+    };
 
-      {/* Main Workspace */}
-      <main className="flex-1 relative overflow-hidden flex flex-col items-center justify-center p-8">
-        <div className="absolute inset-0 opacity-10 pointer-events-none">
-          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500 rounded-full blur-[128px]"></div>
-          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500 rounded-full blur-[128px]"></div>
-        </div>
+    useEffect(() => {
+        const audio = audioRef.current;
+        if (!audio) return;
 
-        <div className="z-10 text-center space-y-4">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[10px] font-bold uppercase tracking-widest mb-4">
-            Editor Ready
-          </div>
-          <h2 className="text-4xl font-light text-white leading-tight">
-            Precision <span className="font-bold">Pitch Control</span><br/>at your fingertips.
-          </h2>
-          <p className="max-w-md mx-auto text-gray-400 text-sm leading-relaxed">
-            Open the inspector to start editing pitch notes. Use the timeline to navigate through your track.
-          </p>
-        </div>
+        if (playing) {
+            audio.currentTime = currentTime;
+            audio.play().catch(console.error);
+        } else {
+            audio.pause();
+        }
+    }, [playing]);
 
-        {/* Placeholder for Timeline/Visualizer if any */}
-        <div className="w-full max-w-5xl h-48 mt-12 glass-panel rounded-2xl flex items-center justify-center border border-white/5">
-            <div className="flex flex-col items-center gap-2 opacity-30">
-                <Music2 className="w-8 h-8" />
-                <span className="text-[10px] font-bold tracking-widest uppercase">Waveform Inspector Active</span>
-            </div>
-        </div>
-      </main>
+    useEffect(() => {
+        const audio = audioRef.current;
+        if (!audio) return;
+        
+        const updateTime = () => {
+            if (playing) setCurrentTime(audio.currentTime);
+        };
+        audio.addEventListener('timeupdate', updateTime);
+        return () => audio.removeEventListener('timeupdate', updateTime);
+    }, [playing, setCurrentTime]);
 
-      {/* Footer / Status Bar */}
-      <footer className="px-5 py-2 bg-panel/30 border-t border-white/5 flex items-center justify-between text-[10px] font-semibold text-gray-500 uppercase tracking-widest">
-        <div className="flex gap-4">
-            <span>Ready</span>
-            <span className="text-blue-500">Latency: 12ms</span>
+    const closeContextMenu = () => setContextMenu(null);
+
+    return (
+        <div className="flex flex-col h-screen bg-[#0e0e1a] text-white font-sans overflow-hidden" onClick={closeContextMenu}>
+            <header className="flex items-center justify-between px-6 py-4 bg-[#16213e] border-b border-[#0f3460] shrink-0 z-10 shadow-md">
+                <div className="flex items-center gap-4">
+                    <div className="w-8 h-8 rounded bg-gradient-to-br from-purple-500 to-orange-500 flex items-center justify-center font-bold text-lg shadow-lg">P</div>
+                    <h1 className="text-xl font-bold tracking-wide bg-gradient-to-r from-purple-400 to-orange-400 bg-clip-text text-transparent">PitchCraft</h1>
+                </div>
+                
+                <div className="flex items-center gap-4">
+                    {!fileId && (
+                        <label className="bg-purple-600 hover:bg-purple-500 transition-colors px-6 py-2 rounded-full font-medium cursor-pointer shadow-lg shadow-purple-900/20 active:scale-95">
+                            Upload Vocal Track
+                            <input type="file" accept="audio/*" onChange={handleFile} className="hidden" />
+                        </label>
+                    )}
+                    
+                    {fileId && (
+                        <>
+                            <div className="flex bg-[#0a0f1d] rounded-lg p-1 border border-[#2a2a50]">
+                                <button
+                                    className={`px-4 py-1.5 rounded-md text-sm transition-all ${currentTool === 'move' ? 'bg-[#2a2a50] text-white shadow' : 'text-gray-400 hover:text-white'}`}
+                                    onClick={() => setCurrentTool('move')}
+                                >
+                                    Move
+                                </button>
+                                <button
+                                    className={`px-4 py-1.5 rounded-md text-sm transition-all ${currentTool === 'vibrato' ? 'bg-[#2a2a50] text-white shadow' : 'text-gray-400 hover:text-white'}`}
+                                    onClick={() => setCurrentTool('vibrato')}
+                                >
+                                    Vibrato
+                                </button>
+                            </div>
+
+                            <button
+                                onClick={() => setPlaying(!playing)}
+                                className="w-10 h-10 rounded-full bg-orange-500 hover:bg-orange-400 flex items-center justify-center transition-all shadow-lg active:scale-90"
+                            >
+                                {playing ? '⏸' : '▶'}
+                            </button>
+                        </>
+                    )}
+                </div>
+            </header>
+
+            {loading && (
+                <div className="absolute inset-0 z-50 flex items-center justify-center bg-[#0e0e1a]/80 backdrop-blur-sm">
+                    <div className="flex flex-col items-center">
+                        <div className="w-12 h-12 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mb-4" />
+                        <span className="text-purple-400 font-medium animate-pulse">Processing Audio with PSOLA...</span>
+                    </div>
+                </div>
+            )}
+            
+            {error && (
+                <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 bg-red-500/90 border border-red-400 text-white px-6 py-3 rounded-lg shadow-xl shadow-red-900/20">
+                    {error}
+                </div>
+            )}
+
+            <main className="flex-1 flex overflow-hidden relative">
+                {fileId ? (
+                    <>
+                        <PianoRoll />
+                        <NoteInspector />
+                    </>
+                ) : (
+                    <div className="flex-1 flex flex-col items-center justify-center text-center opacity-40 select-none">
+                        <div className="w-32 h-32 rounded-3xl bg-gradient-to-br from-purple-500/20 to-orange-500/20 flex items-center justify-center mb-6">
+                            <span className="text-6xl">🎵</span>
+                        </div>
+                        <h2 className="text-2xl font-bold mb-2">No audio loaded</h2>
+                        <p className="text-gray-400 max-w-sm">Upload a clean, monophonic vocal or instrumental track to begin editing pitch.</p>
+                    </div>
+                )}
+                
+                {contextMenu && (
+                    <div 
+                        className="fixed z-50 bg-[#1a1a2e] border border-[#2a2a50] rounded-lg shadow-2xl py-1 w-48 overflow-hidden"
+                        style={{ top: contextMenu.y, left: contextMenu.x }}
+                    >
+                        <button 
+                            className="w-full px-4 py-2 text-left text-sm text-gray-300 hover:bg-white/10 hover:text-white transition-colors flex items-center gap-2"
+                            onClick={() => {
+                                splitNote(contextMenu.noteId, contextMenu.splitTime);
+                                closeContextMenu();
+                            }}
+                        >
+                            <span>✂️</span> Split Note
+                        </button>
+                        <button 
+                            className="w-full px-4 py-2 text-left text-sm text-gray-300 hover:bg-white/10 hover:text-white transition-colors flex items-center gap-2"
+                            onClick={() => {
+                                setInspectorOpen(true);
+                                closeContextMenu();
+                            }}
+                        >
+                            <span>〰</span> Edit Vibrato
+                        </button>
+                        <div className="h-px bg-[#2a2a50] my-1" />
+                        <button 
+                            className="w-full px-4 py-2 text-left text-sm text-red-400 hover:bg-red-500/20 hover:text-red-300 transition-colors flex items-center gap-2"
+                            onClick={() => {
+                                deleteNote(contextMenu.noteId);
+                                closeContextMenu();
+                            }}
+                        >
+                            <span>🗑️</span> Delete Note
+                        </button>
+                    </div>
+                )}
+            </main>
+
+            {renderedUrl && (
+                <audio ref={audioRef} src={renderedUrl} onEnded={() => setPlaying(false)} className="hidden" />
+            )}
         </div>
-        <div>
-            © 2026 Kord Audio Technology
-        </div>
-      </footer>
-    </div>
-  )
+    );
 }

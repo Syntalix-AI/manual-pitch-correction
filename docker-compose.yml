@@ -16,6 +16,8 @@ services:
   frontend:
     build:
       context: ./frontend
+      args:
+        VITE_API_URL: http://localhost:8000
     container_name: pitch_correction_frontend
     ports:
       - "3000:80"

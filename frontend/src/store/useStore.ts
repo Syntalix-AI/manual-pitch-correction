@@ -2,6 +2,13 @@ import { create } from 'zustand';
 import { NoteBlob, PitchPoint, VibratoPoint } from '../types';
 import { uploadAudio, analyzeAudio, renderPitch, getStreamUrl } from '../api';
 
+interface ContextMenu {
+    x: number;
+    y: number;
+    noteId: string;
+    splitTime: number; // absolute time where user right-clicked
+}
+
 interface AppState {
     fileId: string | null;
     audioBlob: Blob | null;
@@ -17,7 +24,7 @@ interface AppState {
     error: string | null;
     renderedUrl: string | null;
     selectedNoteId: string | null;
-    contextMenu: any | null;
+    contextMenu: ContextMenu | null;
     inspectorOpen: boolean;
     past: NoteBlob[][];
     future: NoteBlob[][];
@@ -37,7 +44,7 @@ interface AppState {
     selectNote: (id: string | null) => void;
     deleteNote: (id: string) => void;
     splitNote: (id: string, atTime: number) => void;
-    setContextMenu: (menu: any | null) => void;
+    setContextMenu: (menu: ContextMenu | null) => void;
     setInspectorOpen: (open: boolean) => void;
     updateVibratoPoint: (noteId: string, pointIndex: number, cents: number) => void;
     setVibratoCurve: (noteId: string, curve: VibratoPoint[]) => void;
@@ -109,6 +116,7 @@ export const useStore = create<AppState>((set, get) => ({
             const fileId = await uploadAudio(file);
             const data = await analyzeAudio(fileId);
 
+            // Ensure each note has vibrato_curve
             const notes = data.notes.map(n => ({
                 ...n,
                 vibrato_curve: n.vibrato_curve || [],
@@ -125,6 +133,9 @@ export const useStore = create<AppState>((set, get) => ({
                 renderedUrl: getStreamUrl(fileId, false),
                 selectedNoteId: null,
                 inspectorOpen: false,
+                past: [],
+                future: [],
+                renderTimer: null
             });
         } catch (err: any) {
             set({ error: err.message || 'Failed to open file', loading: false });
@@ -212,7 +223,7 @@ export const useStore = create<AppState>((set, get) => ({
         get().debouncedRender();
     },
 
-    setContextMenu: (menu: any | null) => set({ contextMenu: menu }),
+    setContextMenu: (menu: ContextMenu | null) => set({ contextMenu: menu }),
     setInspectorOpen: (open: boolean) => set({ inspectorOpen: open, selectedNoteId: open ? get().selectedNoteId : null }),
 
     updateVibratoPoint: (noteId: string, pointIndex: number, cents: number) => {

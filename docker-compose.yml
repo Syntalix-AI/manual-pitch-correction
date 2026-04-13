@@ -17,7 +17,7 @@ services:
     build:
       context: ./frontend
       args:
-        VITE_API_URL: http://localhost:8000
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:8000}
     container_name: pitch_correction_frontend
     ports:
       - "3000:80"
@@ -25,7 +25,7 @@ services:
       - backend
     restart: unless-stopped
     environment:
-      - VITE_API_URL=http://localhost:8000
+      - VITE_API_URL=${VITE_API_URL:-http://localhost:8000}
     networks:
       - app-network
 

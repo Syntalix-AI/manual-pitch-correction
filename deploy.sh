@@ -149,6 +149,21 @@ GIT_SHA=""
 
 preflight
 pull_code
+# Determine public EC2/host IP and set VITE_API_URL for frontend build
+info "Determining public IP for frontend API URL..."
+PUBLIC_IP=""
+if PUBLIC_METADATA_IP=$(curl -sf --connect-timeout 2 http://169.254.169.254/latest/meta-data/public-ipv4 2>/dev/null || true); then
+  PUBLIC_IP="$PUBLIC_METADATA_IP"
+fi
+if [[ -z "$PUBLIC_IP" ]]; then
+  PUBLIC_IP=$(curl -sf http://checkip.amazonaws.com 2>/dev/null || true)
+fi
+if [[ -n "$PUBLIC_IP" ]]; then
+  export VITE_API_URL="http://${PUBLIC_IP}:8000"
+  info "Exported VITE_API_URL=${VITE_API_URL}"
+else
+  warn "Could not determine public IP — using defaults from docker-compose.yml"
+fi
 build_and_deploy
 health_check
 cleanup

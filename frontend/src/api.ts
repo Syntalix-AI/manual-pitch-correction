@@ -1,7 +1,11 @@
 import axios from 'axios';
 import { AnalysisResult, NoteBlob } from './types';
 
-const API_BASE = (import.meta.env.VITE_API_URL as string) ?? 'http://localhost:8000';
+const fallbackApiUrl = `${window.location.protocol}//${window.location.hostname}:8000`;
+let API_BASE = import.meta.env.VITE_API_URL as string;
+if (!API_BASE || API_BASE.includes('localhost')) {
+    API_BASE = fallbackApiUrl;
+}
 
 export async function uploadAudio(file: File): Promise<string> {
     const formData = new FormData();
@@ -11,7 +15,7 @@ export async function uploadAudio(file: File): Promise<string> {
 }
 
 export async function analyzeAudio(fileId: string): Promise<AnalysisResult> {
-    const res = await axios.get(`${API_BASE}/analyze/${fileId}`);
+    const res = await axios.post(`${API_BASE}/analyze/${fileId}`);
     return res.data;
 }
 
